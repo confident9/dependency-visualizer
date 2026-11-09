@@ -1,0 +1,7 @@
+{
+  "regex": ["regex-automata", "regex-syntax", "aho-corasick", "memchr"],
+  "regex-automata": ["regex-syntax", "aho-corasick", "memchr"],
+  "regex-syntax": [],
+  "aho-corasick": ["memchr"],
+  "memchr": []
+}

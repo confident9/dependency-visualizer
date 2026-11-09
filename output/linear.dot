@@ -1,0 +1,12 @@
+digraph dependencies {
+    rankdir=TB;
+    node [shape=box, style="rounded,filled", fillcolor="#e8f0fe", fontname="sans-serif"];
+    edge [fontname="sans-serif", fontsize=10];
+    "A" [fillcolor="#a8d5e5", style="rounded,filled,bold"];
+    "B";
+    "C";
+    "D";
+    "A" -> "B";
+    "B" -> "C";
+    "C" -> "D";
+}

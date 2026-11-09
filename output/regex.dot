@@ -1,0 +1,18 @@
+digraph dependencies {
+    rankdir=TB;
+    node [shape=box, style="rounded,filled", fillcolor="#e8f0fe", fontname="sans-serif"];
+    edge [fontname="sans-serif", fontsize=10];
+    "regex" [fillcolor="#a8d5e5", style="rounded,filled,bold"];
+    "aho-corasick";
+    "memchr";
+    "regex-automata";
+    "regex-syntax";
+    "aho-corasick" -> "memchr";
+    "regex" -> "aho-corasick";
+    "regex" -> "memchr";
+    "regex" -> "regex-automata";
+    "regex" -> "regex-syntax";
+    "regex-automata" -> "aho-corasick";
+    "regex-automata" -> "memchr";
+    "regex-automata" -> "regex-syntax";
+}

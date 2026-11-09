@@ -1,0 +1,7 @@
+{
+  "rand": ["rand_core", "rand_chacha", "libc"],
+  "rand_chacha": ["ppv-lite86", "rand_core"],
+  "ppv-lite86": [],
+  "rand_core": [],
+  "libc": []
+}

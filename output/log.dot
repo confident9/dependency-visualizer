@@ -1,0 +1,6 @@
+digraph dependencies {
+    rankdir=TB;
+    node [shape=box, style="rounded,filled", fillcolor="#e8f0fe", fontname="sans-serif"];
+    edge [fontname="sans-serif", fontsize=10];
+    "log" [fillcolor="#a8d5e5", style="rounded,filled,bold"];
+}
