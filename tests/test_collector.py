@@ -14,30 +14,24 @@ from src.collector import (
 )
 
 
+def _write_temp_repo(dir_path: str, data: dict) -> str:
+    """Создает тестовый JSON-файл репозитория.
+
+    Args:
+        dir_path: Путь к временной директории.
+        data: Данные графа зависимостей.
+
+    Returns:
+        Путь к созданному файлу.
+    """
+    path = os.path.join(dir_path, "test_repo.json")
+    with open(path, "w", encoding="utf-8") as file:
+        json.dump(data, file)
+    return path
+
+
 class TestCollector(unittest.TestCase):
     """Набор тестов для проверки извлечения прямых зависимостей."""
-
-    def setUp(self) -> None:
-        """Создает временную директорию для тестовых данных."""
-        self.temp_dir = tempfile.TemporaryDirectory()
-
-    def tearDown(self) -> None:
-        """Очищает временную директорию."""
-        self.temp_dir.cleanup()
-
-    def _create_test_repo(self, data: dict) -> str:
-        """Создает тестовый JSON-файл репозитория.
-
-        Args:
-            data: Данные графа зависимостей.
-
-        Returns:
-            Путь к созданному файлу.
-        """
-        path = os.path.join(self.temp_dir.name, "test_repo.json")
-        with open(path, "w", encoding="utf-8") as file:
-            json.dump(data, file)
-        return path
 
     def test_direct_deps_test_mode(self) -> None:
         """Проверка получения прямых зависимостей в тестовом режиме."""
@@ -47,25 +41,27 @@ class TestCollector(unittest.TestCase):
             "C": [],
             "D": [],
         }
-        path = self._create_test_repo(data)
-        deps = get_direct_dependencies(
-            package_name="A",
-            repo_url=path,
-            test_mode=True,
-        )
-        dep_names = [d.name for d in deps]
-        self.assertEqual(dep_names, ["B", "C"])
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = _write_temp_repo(tmp_dir, data)
+            deps = get_direct_dependencies(
+                package_name="A",
+                repo_url=path,
+                test_mode=True,
+            )
+            dep_names = [d.name for d in deps]
+            self.assertEqual(dep_names, ["B", "C"])
 
     def test_package_not_in_test_repo(self) -> None:
         """Проверка ошибки при отсутствии пакета в тестовом репозитории."""
         data = {"A": ["B"]}
-        path = self._create_test_repo(data)
-        with self.assertRaises(CollectorError):
-            get_direct_dependencies(
-                package_name="Z",
-                repo_url=path,
-                test_mode=True,
-            )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = _write_temp_repo(tmp_dir, data)
+            with self.assertRaises(CollectorError):
+                get_direct_dependencies(
+                    package_name="Z",
+                    repo_url=path,
+                    test_mode=True,
+                )
 
     def test_parse_crates_io_payload(self) -> None:
         """Проверка парсинга ответа Crates.io API."""

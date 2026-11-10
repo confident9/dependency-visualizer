@@ -2,44 +2,52 @@
 
 import os
 import unittest
+from typing import Callable, List
 
 from src.collector import get_direct_dependencies
 from src.graph import build_dependency_graph
 from src.order import compute_loading_order, format_loading_order
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, "test_data")
+
+
+def _make_data_fetcher(filename: str) -> Callable[[str], List[str]]:
+    """Создает функцию получения зависимостей из файла тестовых данных.
+
+    Args:
+        filename: Имя файла в test_data.
+
+    Returns:
+        Функция, возвращающая список зависимостей.
+    """
+    path = os.path.join(DATA_DIR, filename)
+
+    def fetcher(pkg: str) -> List[str]:
+        """Извлекает имена зависимостей для пакета."""
+        deps = get_direct_dependencies(
+            package_name=pkg,
+            repo_url=path,
+            test_mode=True,
+        )
+        return [d.name for d in deps]
+
+    return fetcher
+
 
 class TestOrder(unittest.TestCase):
     """Набор тестов для проверки порядка загрузки зависимостей."""
 
-    def setUp(self) -> None:
-        """Находит путь к тестовым данным."""
-        self.base_dir = os.path.dirname(os.path.dirname(__file__))
-        self.data_dir = os.path.join(self.base_dir, "test_data")
-
-    def _make_fetcher(self, filename: str):
-        """Создает функцию получения зависимостей из файла тестовых данных."""
-        path = os.path.join(self.data_dir, filename)
-
-        def fetcher(pkg: str):
-            deps = get_direct_dependencies(
-                package_name=pkg,
-                repo_url=path,
-                test_mode=True,
-            )
-            return [d.name for d in deps]
-
-        return fetcher
-
     def test_linear_order(self) -> None:
         """Проверка порядка загрузки для линейного графа."""
-        fetcher = self._make_fetcher("linear.json")
+        fetcher = _make_data_fetcher("linear.json")
         graph = build_dependency_graph("A", fetcher)
         order = compute_loading_order(graph)
         self.assertEqual(order, ["D", "C", "B", "A"])
 
     def test_diamond_order(self) -> None:
         """Проверка порядка загрузки для ромбовидного графа."""
-        fetcher = self._make_fetcher("diamond.json")
+        fetcher = _make_data_fetcher("diamond.json")
         graph = build_dependency_graph("A", fetcher)
         order = compute_loading_order(graph)
         self.assertEqual(order[0], "D")
@@ -49,7 +57,7 @@ class TestOrder(unittest.TestCase):
 
     def test_cycle_order(self) -> None:
         """Проверка порядка загрузки при наличии цикла."""
-        fetcher = self._make_fetcher("cycle.json")
+        fetcher = _make_data_fetcher("cycle.json")
         graph = build_dependency_graph("A", fetcher)
         order = compute_loading_order(graph)
         self.assertIn("D", order)

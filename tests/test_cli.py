@@ -2,15 +2,11 @@
 
 import os
 import tempfile
+from typing import Tuple
 import unittest
-from unittest.mock import patch
 from src.cli import (
     FAILURE_EXIT,
     STAGE_1,
-    STAGE_2,
-    STAGE_3,
-    STAGE_4,
-    STAGE_5,
     STAGE_ALL,
     SUCCESS_EXIT,
     main,
@@ -23,31 +19,35 @@ from src.cli import (
 )
 
 
+def _create_test_files(dir_path: str) -> Tuple[str, str]:
+    """Создает временные файлы для тестирования CLI.
+
+    Args:
+        dir_path: Путь к временной директории.
+
+    Returns:
+        Кортеж из пути к файлу конфигурации и пути к выходному файлу.
+    """
+    repo_file = os.path.join(dir_path, "repo.json")
+    with open(repo_file, "w", encoding="utf-8") as f:
+        f.write('{"A": ["B"], "B": []}')
+    out_svg = os.path.join(dir_path, "graph.svg")
+    config_file = os.path.join(dir_path, "config.ini")
+    with open(config_file, "w", encoding="utf-8") as f:
+        f.write(
+            "[visualizer]\n"
+            "package_name = A\n"
+            f"repo_url = {repo_file}\n"
+            "test_mode = true\n"
+            "package_version = 1.0.0\n"
+            f"output_file = {out_svg}\n"
+            "filter_substring = \n"
+        )
+    return config_file, out_svg
+
+
 class TestCli(unittest.TestCase):
     """Набор тестов для проверки функций CLI."""
-
-    def setUp(self) -> None:
-        """Подготавливает временную конфигурацию для тестирования."""
-        self.tmp_dir = tempfile.TemporaryDirectory()
-        self.repo_file = os.path.join(self.tmp_dir.name, "repo.json")
-        with open(self.repo_file, "w", encoding="utf-8") as f:
-            f.write('{"A": ["B"], "B": []}')
-        self.out_svg = os.path.join(self.tmp_dir.name, "graph.svg")
-        self.config_file = os.path.join(self.tmp_dir.name, "config.ini")
-        with open(self.config_file, "w", encoding="utf-8") as f:
-            f.write(
-                "[visualizer]\n"
-                "package_name = A\n"
-                f"repo_url = {self.repo_file}\n"
-                "test_mode = true\n"
-                "package_version = 1.0.0\n"
-                f"output_file = {self.out_svg}\n"
-                "filter_substring = \n"
-            )
-
-    def tearDown(self) -> None:
-        """Очищает временные файлы."""
-        self.tmp_dir.cleanup()
 
     def test_parse_args_defaults(self) -> None:
         """Проверяет значения по умолчанию аргументов CLI."""
@@ -63,8 +63,10 @@ class TestCli(unittest.TestCase):
 
     def test_run_stage_1(self) -> None:
         """Проверяет успешное выполнение этапа 1."""
-        code = run_stage_1(self.config_file)
-        self.assertEqual(code, SUCCESS_EXIT)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cfg_file, _ = _create_test_files(tmp_dir)
+            code = run_stage_1(cfg_file)
+            self.assertEqual(code, SUCCESS_EXIT)
 
     def test_run_stage_1_invalid_config(self) -> None:
         """Проверяет обработку ошибки на этапе 1 при неверном файле."""
@@ -73,29 +75,39 @@ class TestCli(unittest.TestCase):
 
     def test_run_stage_2(self) -> None:
         """Проверяет успешное выполнение этапа 2."""
-        code = run_stage_2(self.config_file)
-        self.assertEqual(code, SUCCESS_EXIT)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cfg_file, _ = _create_test_files(tmp_dir)
+            code = run_stage_2(cfg_file)
+            self.assertEqual(code, SUCCESS_EXIT)
 
     def test_run_stage_3(self) -> None:
         """Проверяет успешное выполнение этапа 3."""
-        code = run_stage_3(self.config_file)
-        self.assertEqual(code, SUCCESS_EXIT)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cfg_file, _ = _create_test_files(tmp_dir)
+            code = run_stage_3(cfg_file)
+            self.assertEqual(code, SUCCESS_EXIT)
 
     def test_run_stage_4(self) -> None:
         """Проверяет успешное выполнение этапа 4."""
-        code = run_stage_4(self.config_file)
-        self.assertEqual(code, SUCCESS_EXIT)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cfg_file, _ = _create_test_files(tmp_dir)
+            code = run_stage_4(cfg_file)
+            self.assertEqual(code, SUCCESS_EXIT)
 
     def test_run_stage_5(self) -> None:
         """Проверяет успешное выполнение этапа 5 и создание SVG."""
-        code = run_stage_5(self.config_file)
-        self.assertEqual(code, SUCCESS_EXIT)
-        self.assertTrue(os.path.exists(self.out_svg))
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cfg_file, out_svg = _create_test_files(tmp_dir)
+            code = run_stage_5(cfg_file)
+            self.assertEqual(code, SUCCESS_EXIT)
+            self.assertTrue(os.path.exists(out_svg))
 
     def test_main_dispatch_all(self) -> None:
         """Проверяет вызов всех этапов через функцию main."""
-        code = main(["-c", self.config_file, "-s", STAGE_ALL])
-        self.assertEqual(code, SUCCESS_EXIT)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cfg_file, _ = _create_test_files(tmp_dir)
+            code = main(["-c", cfg_file, "-s", STAGE_ALL])
+            self.assertEqual(code, SUCCESS_EXIT)
 
 
 if __name__ == "__main__":
